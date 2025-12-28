@@ -1,499 +1,740 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Matematiksel Metin Düzenleyici</title>
 
-  <!-- KaTeX (ONLINE / CDN) -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <!-- KaTeX (ONLINE) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 
-  <!-- PNG / PDF (ONLINE / CDN) -->
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- html2canvas + jsPDF (ONLINE) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
   <style>
-    :root {
-      --bg1:#5865f2; --bg2:#9b59b6;
-      --card:#fff; --text:#111827; --muted:#6b7280; --border:#cbd5e0;
+    :root{
+      --bg1:#6a4bdc;
+      --bg2:#3c86ff;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --border:#d1d5db;
+      --soft:#f3f4f6;
+      --shadow: 0 10px 30px rgba(0,0,0,.18);
+      --radius: 18px;
     }
+    *{box-sizing:border-box}
     body{
-      margin:0; padding:18px;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg,var(--bg1),var(--bg2));
-      min-height:100vh; box-sizing:border-box;
+      margin:0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, var(--bg1), var(--bg2));
+      padding: 18px;
+      color:#111827;
     }
-    .container{
-      max-width:980px; margin:0 auto;
-      background:var(--card);
-      border-radius:16px;
-      padding:18px;
-      box-shadow:0 10px 30px rgba(0,0,0,.15);
+    .wrap{
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    .card{
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px 18px 14px;
     }
     .header{
-      display:flex; justify-content:space-between; align-items:center; gap:12px;
-      padding:8px 6px 16px 6px;
-      border-bottom:3px solid #6b7bd6;
-      margin-bottom:16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 6px 4px 10px;
+      border-bottom: 3px solid rgba(60,134,255,.25);
+      margin-bottom: 14px;
     }
-    .header h1{ margin:0; font-size:24px; color:var(--text); }
+    .title{
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: .2px;
+    }
+    .rightHead{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .status{
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background:#eef2ff;
+      color:#3730a3;
+      border:1px solid rgba(55,48,163,.25);
+      user-select:none;
+    }
     .toggle{
-      display:flex; align-items:center; gap:10px;
-      color:var(--muted); font-weight:700; user-select:none;
-    }
-    .section-title{
-      font-weight:800; color:#374151;
-      letter-spacing:.2px; margin:14px 0 8px;
-      text-transform:uppercase; font-size:12px;
       display:flex; align-items:center; gap:8px;
+      font-size: 13px;
+      color:#111827;
+      user-select:none;
     }
-    select,input[type="number"],textarea{
-      width:100%; box-sizing:border-box;
-      border-radius:10px; border:2px solid var(--border);
-      padding:10px 12px; outline:none; font-size:14px;
+    .toggle input{width:18px;height:18px}
+
+    .row{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin: 12px 0;
     }
-    textarea{
-      height:140px; resize:vertical;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
-    }
-    .muted{ color:var(--muted); font-weight:600; }
-    .controls{
-      background:#f7f8fb; border-radius:12px; padding:14px;
-      display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;
-    }
-    .control-item{ display:flex; flex-direction:column; gap:6px; }
+
     .label{
-      font-size:12px; font-weight:800; color:#374151;
-      letter-spacing:.2px; text-transform:uppercase;
+      font-size: 12px;
+      color: var(--muted);
+      margin: 2px 0 6px;
+      font-style: italic;
     }
-    .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+
+    textarea{
+      width:100%;
+      min-height: 132px;
+      padding: 12px;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      outline:none;
+      background:#fff;
+      font-size: 14px;
+      line-height: 1.4;
+      resize: vertical;
+      white-space: pre-wrap;
+    }
+    textarea:focus{border-color:#7c3aed}
+
+    .controls{
+      background: #f8fafc;
+      border-radius: 14px;
+      padding: 14px;
+      border: 1px solid rgba(209,213,219,.7);
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 12px;
+    }
+    .ctrl{
+      background:#fff;
+      border: 1px solid rgba(209,213,219,.7);
+      border-radius: 12px;
+      padding: 10px;
+    }
+    .ctrl .ct{
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 700;
+      letter-spacing: .2px;
+    }
+    .ctrlRow{
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    select, input[type="number"], input[type="color"]{
+      border: 1px solid rgba(209,213,219,.9);
+      border-radius: 10px;
+      padding: 10px 10px;
+      background:#fff;
+      outline:none;
+      font-size: 14px;
+      min-width: 120px;
+    }
+    input[type="number"]{min-width: 110px}
+    input[type="color"]{
+      padding: 0;
+      height: 42px;
+      width: 64px;
+      min-width: 64px;
+    }
+    .checkLine{
+      display:flex; align-items:center; gap:8px;
+      font-size: 14px;
+      color:#111827;
+      user-select:none;
+    }
+    .checkLine input{width:18px;height:18px}
+
     .btns{
-      display:grid; grid-template-columns:repeat(5,1fr);
-      gap:12px; margin:14px 0;
+      display:grid;
+      grid-template-columns: repeat(5, minmax(0,1fr));
+      gap: 10px;
+      margin-top: 12px;
     }
     button{
-      cursor:pointer; border:none; border-radius:12px;
-      padding:14px 10px; color:#fff; font-weight:900;
-      letter-spacing:.3px; font-size:14px;
+      border:0;
+      border-radius: 12px;
+      padding: 12px 10px;
+      font-weight: 800;
+      letter-spacing: .3px;
+      cursor:pointer;
+      color:#fff;
+      min-height: 46px;
     }
-    .btn-view{ background:linear-gradient(135deg,#6b7bd6,#5850ec); }
-    .btn-clear{ background:linear-gradient(135deg,#ff6aa2,#b72fd7); }
-    .btn-copy{ background:linear-gradient(135deg,#00bcd4,#3b82f6); }
-    .btn-png{ background:linear-gradient(135deg,#ff8a00,#ff3d7f); }
-    .btn-pdf{ background:linear-gradient(135deg,#5b5bd6,#7c3aed); }
-    .hint{
-      border:2px solid #eab308; background:#fff7cc;
-      border-radius:10px; padding:10px 12px;
-      color:#3f3f46; font-weight:700;
-      margin:10px 0 14px;
-    }
-    #preview{
-      min-height:190px;
-      border:2px dashed var(--border);
-      border-radius:12px;
-      padding:14px;
-      box-sizing:border-box;
-      background:transparent; /* default: şeffaf */
-      overflow:auto;
-    }
-    .line{ margin:2px 0; }
-    .line.text{ white-space:pre-wrap; }
-    .line.blank{ height:10px; }
-    .history{
-      margin-top:14px;
-      background:#f7f8fb; border-radius:12px; padding:12px;
-      max-height:240px; overflow:auto;
-    }
-    .history h3{ margin:0 0 10px 0; font-size:14px; color:#374151; }
-    .history-item{
-      background:#fff; border-left:4px solid #6b7bd6;
-      border-radius:10px; padding:10px;
-      margin-bottom:8px; cursor:pointer;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
-      font-size:13px; color:#111827;
-    }
-    .history-item:hover{ background:#f2f5ff; }
+    .b1{background: linear-gradient(135deg,#6366f1,#8b5cf6)}
+    .b2{background: linear-gradient(135deg,#ec4899,#f97316)}
+    .b3{background: linear-gradient(135deg,#06b6d4,#3b82f6)}
+    .b4{background: linear-gradient(135deg,#fb7185,#f59e0b)}
+    .b5{background: linear-gradient(135deg,#64748b,#4f46e5)}
+    button:active{transform: translateY(1px)}
 
-    @media (max-width:820px){
-      .controls{ grid-template-columns:1fr; }
-      .btns{ grid-template-columns:1fr 1fr; }
+    .hint{
+      margin-top: 10px;
+      border: 2px solid #f59e0b;
+      background: #fff7ed;
+      border-radius: 12px;
+      padding: 10px 12px;
+      color:#7c2d12;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .previewWrap{
+      margin-top: 12px;
+      border: 2px dashed rgba(107,114,128,.35);
+      border-radius: 14px;
+      padding: 12px;
+      background: #ffffff;
+      overflow:auto;
+      min-height: 200px;
+    }
+
+    /* Preview: normal metin fontu kalsın */
+    #preview{
+      font-family: Arial, Helvetica, sans-serif;
+      font-style: normal;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      word-break: break-word;
+      text-align: justify; /* ilk açılış: iki yana yasla */
+      color: #111827;
+    }
+
+    /* KaTeX sadece matematikte devreye girsin */
+    #preview .katex{ font-style: normal; }
+    #preview .katex-display{ text-align:center; margin: .65em 0; }
+
+    /* Geçmiş */
+    .history{
+      margin-top: 14px;
+      background: #f8fafc;
+      border-radius: 14px;
+      border: 1px solid rgba(209,213,219,.7);
+      padding: 12px;
+    }
+    .historyTitle{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom: 8px;
+      color:#111827;
+      font-weight: 800;
+    }
+    .hItem{
+      background:#fff;
+      border: 1px solid rgba(209,213,219,.65);
+      border-radius: 12px;
+      padding: 10px;
+      margin-top: 8px;
+      cursor:pointer;
+      overflow:hidden;
+    }
+    .hItem pre{
+      margin:0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color:#111827;
+    }
+
+    .smallNote{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    @media (max-width: 860px){
+      .controls{grid-template-columns: 1fr}
+      .btns{grid-template-columns: 1fr 1fr}
     }
   </style>
 </head>
 
 <body>
-<div class="container">
-  <div class="header">
-    <h1>Matematiksel Metin Düzenleyici</h1>
+  <div class="wrap">
+    <div class="card">
+      <div class="header">
+        <div class="title">Matematiksel Metin Düzenleyici</div>
+        <div class="rightHead">
+          <div id="katexStatus" class="status">KaTeX: kontrol ediliyor…</div>
+          <label class="toggle" title="İlk açılışta kapalıdır. İlk GÖRÜNTÜLE’den sonra otomatik açılır.">
+            <input id="autoRenderChk" type="checkbox" />
+            <span>Otomatik Render</span>
+          </label>
+        </div>
+      </div>
 
-    <!-- İlk açılışta seçili OLMASIN -->
-    <label class="toggle">
-      <input id="autoRenderCheck" type="checkbox">
-      Otomatik Render
-    </label>
+      <div class="row">
+        <div>
+          <div class="label" style="font-style:normal;font-weight:800;letter-spacing:.2px;color:#374151;">ÖRNEK ŞABLONLAR</div>
+          <select id="templateSelect">
+            <option value="empty">Seçiniz…</option>
+            <option value="trig">Trigonometri</option>
+            <option value="derivative">Türev Örneği</option>
+            <option value="integral">İntegral Örneği</option>
+            <option value="matrix">Matris</option>
+            <option value="limit">Limit Örneği</option>
+            <option value="parabola">Parabol Fonksiyonu</option>
+          </select>
+        </div>
+
+        <div>
+          <div id="templateLabel" class="label">Metin / LaTeX alanı</div>
+          <textarea id="inputText" placeholder="Metninizi buraya yapıştırın. Örn: y(t)=5\sqrt{2}\cdot \sin(4t^\circ)"></textarea>
+          <div class="smallNote">
+            İpucu: Metin ile matematiği karıştırabilirsiniz. Örn: “Denklemi kuralım: 5\sqrt{2}\cdot \sin(4t) = -5”.
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="ctrl">
+          <div class="ct">YAZI TİPİ</div>
+          <div class="ctrlRow">
+            <select id="fontFamily">
+              <option value="Arial, Helvetica, sans-serif" selected>Arial</option>
+              <option value="Georgia, serif">Georgia</option>
+              <option value="Times New Roman, Times, serif">Times New Roman</option>
+              <option value="Trebuchet MS, sans-serif">Trebuchet MS</option>
+              <option value="Verdana, sans-serif">Verdana</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="ctrl">
+          <div class="ct">BOYUT (PX)</div>
+          <div class="ctrlRow">
+            <input id="fontSize" type="number" min="10" max="72" value="22">
+          </div>
+        </div>
+
+        <div class="ctrl">
+          <div class="ct">METİN RENGİ</div>
+          <div class="ctrlRow">
+            <input id="textColor" type="color" value="#111827">
+          </div>
+        </div>
+
+        <div class="ctrl">
+          <div class="ct">ARKA PLAN</div>
+          <div class="ctrlRow">
+            <input id="bgColor" type="color" value="#ffffff">
+            <label class="checkLine">
+              <input id="transparentBg" type="checkbox" checked>
+              <span>Şeffaf</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="ctrl">
+          <div class="ct">HİZALAMA</div>
+          <div class="ctrlRow">
+            <select id="alignSelect">
+              <option value="left">Sola</option>
+              <option value="center">Ortala</option>
+              <option value="right">Sağa</option>
+              <option value="justify" selected>İki yana yasla</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="ctrl">
+          <div class="ct">STİL</div>
+          <div class="ctrlRow">
+            <label class="checkLine">
+              <input id="boldChk" type="checkbox">
+              <span>Kalın</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="btns">
+        <button class="b1" id="renderBtn">GÖRÜNTÜLE</button>
+        <button class="b2" id="clearBtn">TEMİZLE</button>
+        <button class="b3" id="copyBtn">KOPYALA</button>
+        <button class="b4" id="pngBtn">PNG İNDİR</button>
+        <button class="b5" id="pdfBtn">PDF İNDİR</button>
+      </div>
+
+      <div class="hint">
+        <b>Şeffaf PNG için:</b> Şeffaf seçeneğini işaretleyin, sonra preview alanına uzun basıp/sağ tıklayıp “Resim olarak kaydet” (cihaza göre değişebilir) veya “PNG İNDİR” butonunu kullanın.
+      </div>
+
+      <div class="previewWrap" id="previewWrap">
+        <div id="preview"></div>
+      </div>
+
+      <div class="history">
+        <div class="historyTitle">
+          <div>GEÇMİŞ (Son 5)</div>
+          <div class="smallNote">Bir kayda dokunarak tekrar yükleyebilirsiniz.</div>
+        </div>
+        <div id="historyList"></div>
+      </div>
+    </div>
   </div>
-
-  <div class="section-title">Örnek Şablonlar</div>
-  <select id="templateSelect">
-    <option value="">Seçiniz...</option>
-    <option value="1">Parabol Fonksiyonu</option>
-    <option value="2">Türev Örneği</option>
-    <option value="3">İntegral Örneği</option>
-    <option value="4">Limit Örneği</option>
-    <option value="5">Trigonometri</option>
-    <option value="6">Matris</option>
-  </select>
-  <div id="templateInfo" class="muted" style="margin:8px 0 10px;">Bir şablon seçin...</div>
-
-  <textarea id="inputArea" placeholder="Buraya metni yapıştırın..."></textarea>
-
-  <div class="controls" style="margin-top:12px;">
-    <div class="control-item">
-      <div class="label">Yazı Tipi</div>
-      <select id="fontSelect">
-        <option value="Arial" selected>Arial</option>
-        <option value="Times New Roman">Times New Roman</option>
-        <option value="Calibri">Calibri</option>
-        <option value="Georgia">Georgia</option>
-      </select>
-    </div>
-
-    <div class="control-item">
-      <div class="label">Boyut (px)</div>
-      <input id="sizeInput" type="number" value="22" min="10" max="80">
-    </div>
-
-    <div class="control-item">
-      <div class="label">Metin Rengi</div>
-      <input id="colorInput" type="color" value="#000000">
-    </div>
-
-    <div class="control-item">
-      <div class="label">Arka Plan</div>
-      <input id="bgColorInput" type="color" value="#ffffff">
-      <!-- İlk açılışta ŞEFFAF seçili -->
-      <label class="row" style="margin-top:8px; color:#374151; font-weight:700;">
-        <input id="transparentBg" type="checkbox" checked>
-        Şeffaf
-      </label>
-    </div>
-
-    <div class="control-item">
-      <div class="label">Hizalama</div>
-      <select id="alignSelect">
-        <option value="left">Sola</option>
-        <option value="center">Ortala</option>
-        <option value="right">Sağa</option>
-        <!-- İlk açılışta İKİ YANA YASLA seçili -->
-        <option value="justify" selected>İki Yana Yasla</option>
-      </select>
-    </div>
-
-    <div class="control-item">
-      <div class="label">Stil</div>
-      <label class="row" style="color:#374151; font-weight:700;">
-        <input id="boldCheck" type="checkbox">
-        Kalın
-      </label>
-    </div>
-  </div>
-
-  <div class="btns">
-    <button class="btn-view" onclick="islemYap()">GÖRÜNTÜLE</button>
-    <button class="btn-clear" onclick="temizle()">TEMİZLE</button>
-    <button class="btn-copy" onclick="kopyala()">KOPYALA</button>
-    <button class="btn-png" onclick="pngIndir()">PNG İNDİR</button>
-    <button class="btn-pdf" onclick="pdfIndir()">PDF İNDİR</button>
-  </div>
-
-  <div class="hint">
-    Şeffaf PNG için: Şeffaf seçeneğini işaretleyin, sonra preview alanına sağ tıklayıp “Resim Olarak Kaydet” seçin.
-  </div>
-
-  <div id="preview"><div class="muted">Yapıştırdığınız metin burada işlenmiş olarak görünecek...</div></div>
-
-  <div class="history">
-    <h3>GEÇMİŞ (Son 5)</h3>
-    <div id="historyList"></div>
-  </div>
-</div>
 
 <script>
-  // =========================
-  // OTURUM DAVRANIŞI
-  // İlk açılışta auto kapalı.
-  // İlk "GÖRÜNTÜLE" tıklamasından sonra, uygulama kapanana kadar auto açık (oturum).
-  // =========================
-  let sessionAutoEnabled = false;
+(function(){
+  const $ = (id)=>document.getElementById(id);
 
-  // ---------- Veri ----------
-  let history = JSON.parse(localStorage.getItem('mathHistory') || '[]');
+  const inputText = $("inputText");
+  const preview = $("preview");
+  const previewWrap = $("previewWrap");
 
+  const templateSelect = $("templateSelect");
+  const templateLabel  = $("templateLabel");
+
+  const fontFamily = $("fontFamily");
+  const fontSize   = $("fontSize");
+  const textColor  = $("textColor");
+  const bgColor    = $("bgColor");
+  const transparentBg = $("transparentBg");
+  const alignSelect = $("alignSelect");
+  const boldChk   = $("boldChk");
+
+  const autoRenderChk = $("autoRenderChk");
+  const katexStatus = $("katexStatus");
+
+  const renderBtn = $("renderBtn");
+  const clearBtn  = $("clearBtn");
+  const copyBtn   = $("copyBtn");
+  const pngBtn    = $("pngBtn");
+  const pdfBtn    = $("pdfBtn");
+
+  const historyList = $("historyList");
+
+  // İstenen davranış:
+  // - Otomatik render ilk açılışta kapalı
+  // - İlk "GÖRÜNTÜLE" tıklanınca otomatik render aktif olsun (checkbox da işaretlensin)
+  let autoModeEnabled = false;
+
+  // Debounce (her yazımda render yapmasın)
+  let tmr = null;
+  function debounceRender(){
+    clearTimeout(tmr);
+    tmr = setTimeout(()=> renderPreview(false), 250);
+  }
+
+  // KaTeX yük durumu (CDN erişimi + script load)
+  function updateKaTeXStatus(){
+    const ok = (window.katex && typeof window.renderMathInElement === "function");
+    katexStatus.textContent = ok ? "KaTeX: hazır (online)" : "KaTeX: yüklenemedi";
+    katexStatus.style.background = ok ? "#ecfeff" : "#fef2f2";
+    katexStatus.style.color = ok ? "#0e7490" : "#991b1b";
+    katexStatus.style.borderColor = ok ? "rgba(14,116,144,.25)" : "rgba(153,27,27,.25)";
+    return ok;
+  }
+  // defer scriptler sonrası kontrol
+  window.addEventListener("load", ()=> setTimeout(updateKaTeXStatus, 60));
+
+  // Şablonlar
   const templates = {
-    '1': 'f(x) = x^2 - 4x + 3\nTepe noktası: (2, -1)',
-    '2': "f(x) = 3x^2 + 2x - 5\nf'(x) = 6x + 2",
-    '3': '\\int_{0}^{1} x^2\\,dx = \\frac{1}{3}',
-    '4': '\\lim_{x \\to 0} \\frac{\\sin x}{x} = 1',
-    '5': '\\sin^2(x) + \\cos^2(x) = 1',
-    '6': '\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}'
-  };
-  const templateInfos = {
-    '1':'Parabol fonksiyonu örneği',
-    '2':'Türev alma örneği',
-    '3':'Belirli integral örneği',
-    '4':'Limit hesaplama örneği',
-    '5':'Trigonometrik özdeşlik',
-    '6':'Matris gösterimi'
+    empty: { label: "Metin / LaTeX alanı", text: "" },
+    trig: { label: "Trigonometrik özdeşlik", text: "\\sin^2(x) + \\cos^2(x) = 1" },
+    derivative: { label: "Türev alma örneği", text: "f(x) = 3x^2 + 2x - 5\nf'(x) = 6x + 2" },
+    integral: { label: "Belirli integral örneği", text: "\\int_{0}^{1} x^2\\,dx = \\frac{1}{3}" },
+    matrix: { label: "Matris gösterimi", text: "\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}" },
+    limit: { label: "Limit hesaplama örneği", text: "\\lim_{x \\to 0} \\frac{\\sin x}{x} = 1" },
+    parabola: { label: "Parabol fonksiyonu örneği", text: "f(x) = x^2 - 4x + 3\nTepe noktası: (2, -1)" }
   };
 
-  // ---------- Yardımcılar ----------
-  function escapeHtml(str){
-    return str.replaceAll('&','&').replaceAll('<','<').replaceAll('>','>');
-  }
-  function normalizeInput(raw){
-    if(!raw) return '';
-    let t = raw;
-    t = t.replace(/\r\n?/g,'\n')
-         .replace(/\u00A0/g,' ')
-         .replace(/\u2009|\u200A|\u202F/g,' ')
-         .replace(/\u2212/g,'-')
-         .replace(/\u2013|\u2014/g,'-')
-         .replace(/[\u2018\u2019]/g,"'")
-         .replace(/[\u201C\u201D]/g,'"');
-    t = t.split('\n').map(l => l.replace(/[ \t]+$/g,'')).join('\n');
-    return t.trimEnd();
-  }
-  function containsExplicitDelimiters(text){
-    // zaten $...$ veya $$...$$ veya \( \) \[ \] varsa elleme
-    return /\$\$[\s\S]+?\$\$|\$[^$]+\$|\\\(|\\\)|\\\[|\\\]/.test(text);
-  }
-  function looksLikeMath(line){
-    const l = line.trim();
-    if(!l) return false;
-
-    // begin/end env
-    if(/\\begin\{.*?\}|\\end\{.*?\}/.test(l)) return true;
-
-    // Türkçe karakter yoğun satırları metin say (Latex komutu yoksa)
-    const hasTR = /[ğüşöçıİĞÜŞÖÇ]/.test(l);
-    const hasLatexCmd = /\\[a-zA-Z]+/.test(l);
-    if(hasTR && !hasLatexCmd) return false;
-
-    // temel math sinyalleri
-    return /\\[a-zA-Z]+|[\^_]|=|[<>]=?|\\(frac|sqrt|int|sum|prod|lim|sin|cos|tan|log|ln|pi|theta|alpha|beta|gamma|cdot|times|pm|leq|geq|neq|infty)\b/.test(l);
-  }
-
-  function applyStyles(){
-    const preview = document.getElementById('preview');
-    preview.style.fontFamily = document.getElementById('fontSelect').value;
-    preview.style.fontSize = document.getElementById('sizeInput').value + 'px';
-    preview.style.color = document.getElementById('colorInput').value;
-    preview.style.textAlign = document.getElementById('alignSelect').value;
-    preview.style.fontWeight = document.getElementById('boldCheck').checked ? 'bold' : 'normal';
-
-    if(document.getElementById('transparentBg').checked){
-      preview.style.backgroundColor = 'transparent';
-    } else {
-      preview.style.backgroundColor = document.getElementById('bgColorInput').value;
-    }
-  }
-
-  function buildPreviewHTML(rawText){
-    const text = normalizeInput(rawText);
-    if(!text.trim()) return '<div class="muted">Yapıştırdığınız metin burada işlenmiş olarak görünecek...</div>';
-
-    // kullanıcı delimiter vermişse direkt göster (KaTeX zaten bunu render eder)
-    if(containsExplicitDelimiters(text)){
-      return escapeHtml(text).replaceAll('\n','<br>');
-    }
-
-    // delimiter yoksa: satır satır, math olanları $$...$$ içine sar
-    const lines = text.split('\n');
-    return lines.map(line=>{
-      const l = line.trim();
-      if(!l) return '<div class="line blank">&nbsp;</div>';
-      if(looksLikeMath(l)) return `<div class="line math">$$${escapeHtml(l)}$$</div>`;
-      return `<div class="line text">${escapeHtml(line)}</div>`;
-    }).join('');
-  }
-
-  function katexReady(timeoutMs=5000){
-    const start = Date.now();
-    return new Promise(resolve=>{
-      (function tick(){
-        if(window.katex && window.renderMathInElement) return resolve(true);
-        if(Date.now()-start>=timeoutMs) return resolve(false);
-        setTimeout(tick,60);
-      })();
-    });
-  }
-
-  async function renderPreview(force=false){
-    applyStyles();
-
-    const preview = document.getElementById('preview');
-    const input = document.getElementById('inputArea').value;
-    preview.innerHTML = buildPreviewHTML(input);
-
-    const ok = await katexReady();
-    if(!ok) return;
-
-    // Auto ON koşulu:
-    // - checkbox açıksa veya
-    // - oturumda "ilk görüntüle" sonrası sessionAutoEnabled true ise
-    const autoOn = document.getElementById('autoRenderCheck').checked || sessionAutoEnabled;
-
-    // Auto kapalıysa yalnızca force=true ile render et
-    if(!autoOn && !force) return;
-
-    try{
-      renderMathInElement(preview,{
-        delimiters:[
-          {left:'$$', right:'$$', display:true},
-          {left:'$', right:'$', display:false},
-          {left:'\\(', right:'\\)', display:false},
-          {left:'\\[', right:'\\]', display:true}
-        ],
-        throwOnError:false
-      });
-    }catch(e){ console.error(e); }
-  }
-
-  // ---------- Geçmiş ----------
-  function addHistory(text){
-    const t = normalizeInput(text);
-    if(!t.trim()) return;
-    history = history.filter(h=>h!==t);
-    history.unshift(t);
-    history = history.slice(0,5);
-    localStorage.setItem('mathHistory', JSON.stringify(history));
-    showHistory();
-  }
-  function showHistory(){
-    const list = document.getElementById('historyList');
-    if(!history.length){ list.innerHTML = '<div class="muted">Henüz kayıt yok.</div>'; return; }
-    list.innerHTML = history.map(item=>{
-      const safe = escapeHtml(item).replaceAll('\n','<br>');
-      return `<div class="history-item" data-raw="${escapeHtml(item)}" onclick="pickHistory(this)">${safe}</div>`;
-    }).join('');
-  }
-  function pickHistory(el){
-    const raw = el.getAttribute('data-raw') || '';
-    const txt = raw.replaceAll('<','<').replaceAll('>','>').replaceAll('&','&');
-    document.getElementById('inputArea').value = txt;
-
-    // Geçmişten seçince de "görüntüle" mantığı gibi davran
-    sessionAutoEnabled = true;
-    document.getElementById('autoRenderCheck').checked = true;
-
-    renderPreview(true);
-  }
-
-  // ---------- Butonlar ----------
-  function islemYap(){
-    const input = document.getElementById('inputArea').value;
-    if(!input.trim()) return;
-
-    // İSTEK: İlk GÖRÜNTÜLE'den sonra, uygulama kapanana kadar otomatik render çalışsın
-    sessionAutoEnabled = true;
-    document.getElementById('autoRenderCheck').checked = true;
-
-    renderPreview(true);   // force render
-    addHistory(input);
-  }
-
-  function temizle(){
-    document.getElementById('inputArea').value = '';
-    document.getElementById('preview').innerHTML = '<div class="muted">Yapıştırdığınız metin burada işlenmiş olarak görünecek...</div>';
-    document.getElementById('templateSelect').value = '';
-    document.getElementById('templateInfo').textContent = 'Bir şablon seçin...';
-  }
-
-  function kopyala(){
-    const text = document.getElementById('preview').innerText || '';
-    navigator.clipboard.writeText(text).then(()=>alert('Kopyalandı.')).catch(()=>alert('Kopyalama başarısız.'));
-  }
-
-  async function pngIndir(){
-    const preview = document.getElementById('preview');
-    await renderPreview(true);
-    html2canvas(preview,{
-      backgroundColor: document.getElementById('transparentBg').checked ? null : preview.style.backgroundColor,
-      scale: 2
-    }).then(canvas=>{
-      const link=document.createElement('a');
-      link.download='matematik.png';
-      link.href=canvas.toDataURL('image/png');
-      link.click();
-    });
-  }
-
-  async function pdfIndir(){
-    const preview = document.getElementById('preview');
-    await renderPreview(true);
-    html2canvas(preview,{
-      backgroundColor: document.getElementById('transparentBg').checked ? null : preview.style.backgroundColor,
-      scale: 2
-    }).then(canvas=>{
-      const imgData = canvas.toDataURL('image/png');
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF('p','pt','a4');
-      const pageW = pdf.internal.pageSize.getWidth();
-      const imgW = pageW - 40;
-      const imgH = canvas.height * imgW / canvas.width;
-      pdf.addImage(imgData,'PNG',20,20,imgW,imgH);
-      pdf.save('matematik.pdf');
-    });
-  }
-
-  // ---------- Başlangıç ----------
-  document.addEventListener('DOMContentLoaded', ()=>{
-    const sel = document.getElementById('templateSelect');
-    const info = document.getElementById('templateInfo');
-
-    sel.addEventListener('change', ()=>{
-      const v = sel.value;
-      if(!v) return;
-      document.getElementById('inputArea').value = templates[v] || '';
-      info.textContent = templateInfos[v] || '';
-      // Otomatik render oturumda açılmışsa yazınca render eder; değilse sadece görünüm günceller
+  templateSelect.addEventListener("change", ()=>{
+    const key = templateSelect.value;
+    const tpl = templates[key] || templates.empty;
+    templateLabel.textContent = tpl.label || "Metin / LaTeX alanı";
+    if(key !== "empty"){
+      inputText.value = tpl.text;
       renderPreview(false);
-    });
-
-    // Checkbox değişince:
-    // - açılırsa anında render et
-    // - kapanırsa sessionAutoEnabled'i kapatma (istenirse kapatırız)
-    document.getElementById('autoRenderCheck').addEventListener('change', ()=>{
-      const isOn = document.getElementById('autoRenderCheck').checked;
-      if(isOn) renderPreview(true);
-      else renderPreview(false);
-    });
-
-    // Input değişince:
-    // - sessionAutoEnabled veya checkbox açıksa otomatik render eder
-    let tmr = null;
-    const input = document.getElementById('inputArea');
-    const schedule = () => {
-      clearTimeout(tmr);
-      tmr = setTimeout(()=>renderPreview(false), 250);
-    };
-    input.addEventListener('input', schedule);
-    input.addEventListener('paste', ()=>setTimeout(()=>renderPreview(false),0));
-
-    // Stil değişiklikleri
-    ['fontSelect','sizeInput','colorInput','bgColorInput','alignSelect','boldCheck','transparentBg']
-      .forEach(id=>{
-        const el = document.getElementById(id);
-        el.addEventListener('input', schedule);
-        el.addEventListener('change', schedule);
-      });
-
-    showHistory();
-    applyStyles(); // ilk açılışta şeffaf + justify uygulanır
+    }
   });
+
+  // Ayarları preview'a uygula (metin bozulmadan)
+  function applyStyle(){
+    preview.style.fontFamily = fontFamily.value;
+    preview.style.fontSize = `${Number(fontSize.value || 22)}px`;
+    preview.style.color = textColor.value || "#111827";
+    preview.style.fontWeight = boldChk.checked ? "700" : "400";
+
+    // Hizalama: preview metni
+    const a = alignSelect.value;
+    preview.style.textAlign = a;
+
+    // Arkaplan
+    if(transparentBg.checked){
+      previewWrap.style.background = "transparent";
+      previewWrap.style.borderColor = "rgba(209,213,219,.65)";
+    }else{
+      previewWrap.style.background = bgColor.value || "#ffffff";
+    }
+  }
+
+  // Kopyala-yapıştırla gelen metinlerde matematik parçalarını yakalamak için
+  // - satır matematikse $$...$$
+  // - metin içindeki latex tokenları \( ... \)
+  function autoDelimitLatex(raw){
+    const lines = (raw || "").replace(/\r\n/g,"\n").split("\n");
+
+    const looksLikeStep = (s)=> /^\s*\d+\.\s+/.test(s.trim());
+
+    const isMathLine = (s)=>{
+      const t = s.trim();
+      if(!t) return false;
+
+      // Eğer satır "1. Denklem..." gibi adım cümlesiyse satırı komple math yapma
+      if(looksLikeStep(t)) return false;
+
+      const hasLatexCmd = /\\(frac|sqrt|sin|cos|tan|cot|sec|csc|lim|int|begin|end|cdot|times|Rightarrow|implies|to|pi|theta|circ|sum|prod)\b/.test(t);
+      const hasMathOps = /[=^_]/.test(t);
+      const hasLetters = /[a-zA-ZğüşöçıİĞÜŞÖÇ]/.test(t.replace(/\\[a-zA-Z]+/g,""));
+
+      // Saf latex gibi görünen kısa satırlar genelde math satırıdır
+      if(hasLatexCmd && (hasMathOps || !hasLetters) && t.length < 180) return true;
+
+      // f(x)=..., x^2... gibi belirgin ifadeler
+      if(/[=]/.test(t) && (hasLatexCmd || /[0-9][a-zA-Z]|\b[fgy]\(x\)/.test(t)) && t.length < 180) return true;
+
+      return false;
+    };
+
+    const wrapInlineTokens = (s)=>{
+      // \sqrt{2}, \frac{1}{2}, \sin(4t^\circ) gibi komut içeren parçaları inline yap
+      // Çok agresif olmamak için: boşluklarla çevrili "komutlu" parçaları hedefle
+      return s.replace(/(^|[\s:;,(])((?:[0-9]*\s*)?\\[a-zA-Z]+(?:\{[^}]*\})*(?:\([^\)]*\))?(?:\^\{[^}]*\}|\^[^\s,.;:)]*)?(?:_\{[^}]*\}|_[^\s,.;:)]*)?)/g,
+        (m, p1, p2) => `${p1}\\(${p2}\\)`);
+    };
+
+    const out = lines.map(line=>{
+      if(isMathLine(line)){
+        return `$$${line.trim()}$$`;
+      }
+      return wrapInlineTokens(line);
+    });
+
+    return out.join("\n");
+  }
+
+  function renderWithKaTeX(prepared){
+    // Önce düz metin bas (HTML kaçış problemi yok)
+    preview.textContent = prepared;
+
+    // KaTeX yüklüyse, delimiterlara göre sadece math parçalarını render et
+    if(window.renderMathInElement){
+      try{
+        window.renderMathInElement(preview, {
+          delimiters: [
+            { left: "$$", right: "$$", display: true },
+            { left: "\\[", right: "\\]", display: true },
+            { left: "$", right: "$", display: false },
+            { left: "\\(", right: "\\)", display: false }
+          ],
+          throwOnError: false
+        });
+      }catch(e){
+        console.error("KaTeX render error:", e);
+      }
+    }
+  }
+
+  function renderPreview(addToHistory){
+    applyStyle();
+
+    const raw = inputText.value || "";
+    const prepared = autoDelimitLatex(raw);
+
+    // KaTeX durumunu güncelle
+    updateKaTeXStatus();
+
+    renderWithKaTeX(prepared);
+
+    if(addToHistory){
+      pushHistory(raw);
+      drawHistory();
+    }
+  }
+
+  // İlk render sonrası otomatik mod: uygulamayı kapatana kadar
+  function enableAutoMode(){
+    autoModeEnabled = true;
+    autoRenderChk.checked = true; // kullanıcı isteği: tıklayınca seçili hale gelsin
+  }
+
+  // Otomatik render checkbox: kullanıcı isterse manuel de açıp kapatsın
+  autoRenderChk.addEventListener("change", ()=>{
+    autoModeEnabled = autoRenderChk.checked;
+    if(autoModeEnabled) debounceRender();
+  });
+
+  // İlk açılış: şeffaf + justify seçili (ZATEN HTML default)
+  applyStyle();
+
+  // Yazımda otomatik render (autoModeEnabled ise)
+  inputText.addEventListener("input", ()=>{
+    if(autoModeEnabled) debounceRender();
+  });
+
+  // Kontrol değişince (font/renk/hiza vb) otomatik mod açıkken render
+  [fontFamily, fontSize, textColor, bgColor, transparentBg, alignSelect, boldChk].forEach(el=>{
+    el.addEventListener("change", ()=>{
+      applyStyle();
+      if(autoModeEnabled) debounceRender();
+    });
+  });
+
+  // Butonlar
+  renderBtn.addEventListener("click", ()=>{
+    enableAutoMode();         // ilk tıklamada otomatik modu aç
+    renderPreview(true);      // geçmişe ekle
+  });
+
+  clearBtn.addEventListener("click", ()=>{
+    inputText.value = "";
+    preview.textContent = "";
+  });
+
+  copyBtn.addEventListener("click", async ()=>{
+    const raw = inputText.value || "";
+    try{
+      await navigator.clipboard.writeText(raw);
+      alert("Kopyalandı.");
+    }catch(e){
+      // fallback
+      inputText.select();
+      document.execCommand("copy");
+      alert("Kopyalandı.");
+    }
+  });
+
+  async function downloadPNG(){
+    applyStyle();
+    if(window.html2canvas){
+      const canvas = await window.html2canvas(previewWrap, {
+        backgroundColor: transparentBg.checked ? null : (bgColor.value || "#ffffff"),
+        scale: 2
+      });
+      const a = document.createElement("a");
+      a.href = canvas.toDataURL("image/png");
+      a.download = "matematik.png";
+      a.click();
+    }else{
+      alert("html2canvas yüklenemedi.");
+    }
+  }
+
+  async function downloadPDF(){
+    applyStyle();
+    if(!window.html2canvas){
+      alert("html2canvas yüklenemedi.");
+      return;
+    }
+    const canvas = await window.html2canvas(previewWrap, {
+      backgroundColor: transparentBg.checked ? "#ffffff" : (bgColor.value || "#ffffff"),
+      scale: 2
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+    const { jsPDF } = window.jspdf || {};
+    if(!jsPDF){
+      alert("jsPDF yüklenemedi.");
+      return;
+    }
+
+    // A4: 210x297 mm
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pageW = 210;
+    const pageH = 297;
+
+    // Görseli sayfaya sığdır
+    const imgW = pageW - 20;
+    const imgH = (canvas.height * imgW) / canvas.width;
+
+    let y = 10;
+    if(imgH <= pageH - 20){
+      pdf.addImage(imgData, "PNG", 10, y, imgW, imgH);
+    }else{
+      // Çok uzunsa sayfalara böl (basit kırpma)
+      let remaining = imgH;
+      let offset = 0;
+
+      while(remaining > 0){
+        pdf.addImage(imgData, "PNG", 10, 10 - offset, imgW, imgH);
+        remaining -= (pageH - 20);
+        offset += (pageH - 20);
+        if(remaining > 0) pdf.addPage();
+      }
+    }
+
+    pdf.save("matematik.pdf");
+  }
+
+  pngBtn.addEventListener("click", ()=> downloadPNG());
+  pdfBtn.addEventListener("click", ()=> downloadPDF());
+
+  // Geçmiş (son 5)
+  const HISTORY_KEY = "math_editor_history_v1";
+  function getHistory(){
+    try{
+      const x = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+      return Array.isArray(x) ? x : [];
+    }catch(_){ return []; }
+  }
+  function setHistory(arr){
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(arr));
+  }
+  function pushHistory(raw){
+    const h = getHistory();
+    const cleaned = (raw || "").trim();
+    if(!cleaned) return;
+
+    // aynıysa tekrar ekleme
+    if(h[0] === cleaned) return;
+
+    h.unshift(cleaned);
+    const sliced = h.slice(0,5);
+    setHistory(sliced);
+  }
+  function drawHistory(){
+    const h = getHistory();
+    historyList.innerHTML = "";
+    h.forEach((txt)=>{
+      const div = document.createElement("div");
+      div.className = "hItem";
+      const pre = document.createElement("pre");
+      pre.textContent = txt;
+      div.appendChild(pre);
+      div.addEventListener("click", ()=>{
+        inputText.value = txt;
+        renderPreview(false);
+        // otomatik mod açık ise yazınca anında güncellesin
+        if(autoModeEnabled) debounceRender();
+      });
+      historyList.appendChild(div);
+    });
+  }
+  drawHistory();
+
+  // İlk açılışta preview boş; otomatik render kapalı
+  // (İstersen buraya demo başlangıç metni koyabilirsin.)
+})();
 </script>
 </body>
 </html>
-```0
